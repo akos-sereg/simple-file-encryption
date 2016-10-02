@@ -6,11 +6,11 @@ Encryption library that allows you to add extra metadata information to the encr
 // Encrypt file at "filePath", with custom metadata
 ISimpleFileEncryptionProvider encryption = new SimpleFileEncryptionProvider();
 byte[] content = File.ReadAllBytes(filePath);
-byte[] cipher = encryption.Encrypt<dynamic>(new { Filename = "Filename.txt" }, content, "password12345");
+byte[] cipher = encryption.Encrypt<dynamic>(new { Filename = "Filename.txt" }, content, "passwd");
 
 // Decrypt cipher and read metadata
 dynamic meta;
-byte[] decrypted = encryption.Decrypt<dynamic>(cipher, "password12345", out meta); // throws WrongPasswordException
+byte[] decrypted = encryption.Decrypt<dynamic>(cipher, "passwd", out meta); // throws WrongPasswordException
 Console.WriteLine(meta.Filename.ToString()); // "Filename.txt"
 ```
 
