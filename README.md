@@ -1,6 +1,8 @@
 # Simple File Encryption #
 Encryption library that allows you to add extra metadata information to the encrypted file.
 
+[![Version](https://img.shields.io/nuget/v/SimpleFileEncryption.svg)](https://www.nuget.org/packages/SimpleFileEncryption)
+
 ### Usage ###
 ```csharp
 // Encrypt file at "filePath", with custom metadata

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>SimpleFileEncryption</id>
+        <version>1.0.0</version>
+        <title>Simple File Encryption</title>
+        <authors>Akos Sereg</authors>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>File encryption library that allows you to add custom metadata to encrypted files</description>
+        <summary />
+        <copyright>MIT</copyright>
+        <dependencies>
+            <dependency id="Newtonsoft.Json" version="9.0.1" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="..\simple-file-encryption\bin\Debug\simple-file-encryption.dll" target="lib\net45\simple-file-encryption.dll" />
+        <file src="..\simple-file-encryption\bin\Debug\simple-file-encryption.pdb" target="lib\net45\simple-file-encryption.pdb" />
+    </files>
+</package>
