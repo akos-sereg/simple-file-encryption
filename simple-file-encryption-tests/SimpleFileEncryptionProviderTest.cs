@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Security.Cryptography;
+using System.IO;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimpleFileEncryption.Model;
 using SimpleFileEncryption;
@@ -21,7 +22,7 @@ namespace SimpleFileEncryptionTests
             new Random().NextBytes(randomBytes);
 
             CryptoMetadata meta = new CryptoMetadata("sample");
-
+            
             // Act
             byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password");
             CryptoMetadata decryptedMeta;
@@ -117,6 +118,93 @@ namespace SimpleFileEncryptionTests
             byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password");
             CryptoMetadata decryptedMeta;
             encrypt.Decrypt(cipher, "Invalid Password", out decryptedMeta);
+        }
+
+        [TestMethod]
+        public void SimpleFileEncryption_EncryptMetadataAswell_DecryptWorks()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            CryptoMetadata meta = new CryptoMetadata("sample");
+
+            // Act
+            byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password", true);
+            CryptoMetadata decryptedMeta;
+            byte[] decrypted = encrypt.Decrypt(cipher, "Sample Password", out decryptedMeta);
+
+            // Assert
+            Assert.IsNotNull(decryptedMeta);
+            Assert.AreEqual(meta.Author, decryptedMeta.Author);
+            Assert.AreEqual(meta.AuthorDomain, decryptedMeta.AuthorDomain);
+            Assert.AreEqual(meta.EncryptedAt, decryptedMeta.EncryptedAt);
+            Assert.AreEqual(meta.IpAddress, decryptedMeta.IpAddress);
+            Assert.AreEqual(meta.MachineName, decryptedMeta.MachineName);
+            Assert.AreEqual(meta.OriginalFilename, decryptedMeta.OriginalFilename);
+
+            Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(decrypted, randomBytes));
+        }
+
+        [TestMethod]
+        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWorks()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            CryptoMetadata meta = new CryptoMetadata("sample");
+
+            // Act
+            byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password", true);
+            CryptoMetadata decryptedMeta = encrypt.GetMetadata<CryptoMetadata>(cipher, "Sample Password");
+
+            // Assert
+            Assert.IsNotNull(decryptedMeta);
+            Assert.AreEqual(meta.Author, decryptedMeta.Author);
+            Assert.AreEqual(meta.AuthorDomain, decryptedMeta.AuthorDomain);
+            Assert.AreEqual(meta.EncryptedAt, decryptedMeta.EncryptedAt);
+            Assert.AreEqual(meta.IpAddress, decryptedMeta.IpAddress);
+            Assert.AreEqual(meta.MachineName, decryptedMeta.MachineName);
+            Assert.AreEqual(meta.OriginalFilename, decryptedMeta.OriginalFilename);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(PasswordRequiredException))]
+        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWithNoPassword()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            CryptoMetadata meta = new CryptoMetadata("sample");
+
+            // Act
+            byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password", true);
+            encrypt.GetMetadata<CryptoMetadata>(cipher);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(WrongPasswordException))]
+        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWithBadPassword()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            CryptoMetadata meta = new CryptoMetadata("sample");
+
+            // Act
+            byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password", true);
+            encrypt.GetMetadata<CryptoMetadata>(cipher, "Invalid Password");
         }
     }
 }

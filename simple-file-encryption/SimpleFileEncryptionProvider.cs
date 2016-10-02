@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Configuration;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
@@ -26,7 +27,7 @@ namespace SimpleFileEncryption
         /// </summary>
         private readonly byte[] header = { 0xFA, 0x15, 0xEC, 0x0D, 0xE5 };
 
-        public byte[] Encrypt<T>(T metadata, byte[] content, string password)
+        public byte[] Encrypt<T>(T metadata, byte[] content, string password, bool encryptMetadata = false)
         {
             if (metadata == null)
             {
@@ -34,11 +35,21 @@ namespace SimpleFileEncryption
             }
 
             List<byte> data = new List<byte>();
+            data.AddRange(header);
 
             string meta = JsonConvert.SerializeObject(metadata);
-            data.AddRange(header);
-            data.AddRange(Encoding.UTF8.GetBytes(MetaLengthKey + ":" + meta.Length + "|" + meta));
-
+            
+            if (encryptMetadata)
+            {
+                byte[] encryptedMeta = this.cryptoProvider.Encrypt(Encoding.UTF8.GetBytes(meta), password);
+                data.AddRange(Encoding.UTF8.GetBytes(MetaLengthKey + ":" + encryptedMeta.Length + "|"));
+                data.AddRange(encryptedMeta);
+            }
+            else
+            {    
+                data.AddRange(Encoding.UTF8.GetBytes(MetaLengthKey + ":" + meta.Length + "|" + meta));    
+            }
+            
             byte[] cipher = this.cryptoProvider.Encrypt(content, password);
             data.AddRange(cipher);
 
@@ -47,8 +58,8 @@ namespace SimpleFileEncryption
 
         public byte[] Decrypt<T>(byte[] content, string password, out T metadata)
         {
-            metadata = this.GetMetadata<T>(content);
-            long metaLength = JsonConvert.SerializeObject(metadata).Length;
+            long metaLength;
+            metadata = this.GetMetadataInner<T>(content, password, out metaLength);
             long dataOffset = header.Length + (MetaLengthKey + ":|").Length + metaLength.ToString().Length + metaLength;
 
             var cipher = new List<byte>();
@@ -65,7 +76,6 @@ namespace SimpleFileEncryption
             {
                 throw new WrongPasswordException("Wrong password provided", password);
             }
-            
         }
 
         public byte[] Encrypt(byte[] content, string password)
@@ -79,24 +89,50 @@ namespace SimpleFileEncryption
             return this.Decrypt(content, password, out meta);
         }
 
-        public T GetMetadata<T>(string filePath)
+        public T GetMetadata<T>(byte[] content)
         {
-            byte[] content = File.ReadAllBytes(filePath);
-            return this.GetMetadata<T>(content);
+            return this.GetMetadata<T>(content, null);
         }
 
-        private T GetMetadata<T>(byte[] content)
+        public T GetMetadata<T>(byte[] content, string password)
+        {
+            long metaLength;
+            return this.GetMetadataInner<T>(content, password, out metaLength);
+        }
+
+        private T GetMetadataInner<T>(byte[] content, string password, out long metaLength)
         {
             if (!this.IsEncrypted(content))
             {
+                metaLength = 0;
                 return default(T);
             }
 
             long metaStartOffset;
-            long metaLength = this.GetMetaLength(content, out metaStartOffset);
-            string serializedMeta = this.GetMetadata(content, metaStartOffset, metaLength);
+            metaLength = this.GetMetaLength(content, out metaStartOffset);
+            byte[] meta = this.GetMetadata(content, metaStartOffset, metaLength);
 
-            return JsonConvert.DeserializeObject<T>(serializedMeta);
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(meta));
+            }
+            catch (JsonReaderException)
+            {
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new PasswordRequiredException("Metadata is encrypted, password is required but missing.");
+                }
+
+                try
+                {
+                    byte[] decryptedMetadata = this.cryptoProvider.Decrypt(meta, password);
+                    return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(decryptedMetadata));
+                }
+                catch (CryptographicException)
+                {
+                    throw new WrongPasswordException("Unable to read metadata from cipher", password);
+                }
+            }
         }
 
         private bool IsEncrypted(byte[] content)
@@ -138,7 +174,7 @@ namespace SimpleFileEncryption
             return long.Parse(length);
         }
 
-        private string GetMetadata(byte[] content, long offset, long length)
+        private byte[] GetMetadata(byte[] content, long offset, long length)
         {
             if (offset == -1)
             {
@@ -152,7 +188,7 @@ namespace SimpleFileEncryption
                 metaContent.Add(content[i]);
             }
 
-            return Encoding.UTF8.GetString(metaContent.ToArray());
+            return metaContent.ToArray();
         }
     }
 }

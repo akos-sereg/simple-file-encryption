@@ -9,8 +9,9 @@
         /// <param name="metadata">Metadata (can be an instance of dynamic, CryptoMeta, or anything else)</param>
         /// <param name="content">Content that should be encrypted</param>
         /// <param name="password">Result will be encrypted with this password</param>
+        /// <param name="encryptMetadata">If set to true, metadata will be encrypted as well</param>
         /// <returns>Metadata and encrypted data. Please note that metadata will not be encrypted.</returns>
-        byte[] Encrypt<T>(T metadata, byte[] content, string password);
+        byte[] Encrypt<T>(T metadata, byte[] content, string password, bool encryptMetadata = false);
 
         /// <summary>
         /// Decrypt data, using specified <see cref="password"/>.
@@ -39,11 +40,20 @@
         byte[] Decrypt(byte[] content, string password);
 
         /// <summary>
-        /// Get metadata of encrypted file
+        /// Get metadata of encrypted data
         /// </summary>
         /// <typeparam name="T">Metadata (can be an instance of dynamic, CryptoMeta, or anything else)</typeparam>
-        /// <param name="filePath">Source file</param>
+        /// <param name="cipher">Result of Encrypt method</param>
+        /// <returns>Metadata that was passed when Encrypt was called (with encryptMetadata = false, otherwise it would throw PasswordRequiredException)</returns>
+        T GetMetadata<T>(byte [] cipher);
+
+        /// <summary>
+        /// Get metadata of encrypted data
+        /// </summary>
+        /// <typeparam name="T">Metadata (can be an instance of dynamic, CryptoMeta, or anything else)</typeparam>
+        /// <param name="cipher">Result of Encrypt method</param>
+        /// <param name="password">Password</param>
         /// <returns>Metadata that was passed when Encrypt was called</returns>
-        T GetMetadata<T>(string filePath);
+        T GetMetadata<T>(byte[] cipher, string password);
     }
 }
