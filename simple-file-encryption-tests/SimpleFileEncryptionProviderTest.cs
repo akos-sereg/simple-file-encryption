@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimpleFileEncryption.Model;
 using SimpleFileEncryption;
+using SimpleFileEncryption.Exceptions;
 
 namespace SimpleFileEncryptionTests
 {
@@ -60,6 +61,7 @@ namespace SimpleFileEncryptionTests
             Assert.AreEqual(meta.SomeParameter.ToString(), decryptedMeta.SomeParameter.ToString());
 
             Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(decrypted, randomBytes));
+            Console.WriteLine();
         }
 
         [TestMethod]
@@ -100,7 +102,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(CryptographicException))]
+        [ExpectedException(typeof(WrongPasswordException))]
         public void SimpleFileEncryption_DecryptWithInvalidPassword_ThrowsException()
         {
             // Arrange

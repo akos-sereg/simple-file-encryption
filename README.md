@@ -10,7 +10,7 @@ byte[] cipher = encryption.Encrypt<dynamic>(new { Filename = "Filename.txt" }, c
 
 // Decrypt cipher and read metadata
 dynamic meta;
-byte[] decrypted = encryption.Decrypt<dynamic>(cipher, "password12345", out meta);
+byte[] decrypted = encryption.Decrypt<dynamic>(cipher, "password12345", out meta); // throws WrongPasswordException
 Console.WriteLine(meta.Filename.ToString()); // "Filename.txt"
 ```
 

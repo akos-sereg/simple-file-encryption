@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 using SimpleFileEncryption.Cryptography;
+using SimpleFileEncryption.Exceptions;
 
 namespace SimpleFileEncryption
 {
@@ -55,7 +57,15 @@ namespace SimpleFileEncryption
                 cipher.Add(content[i]);
             }
 
-            return this.cryptoProvider.Decrypt(cipher.ToArray(), password);
+            try
+            {
+                return this.cryptoProvider.Decrypt(cipher.ToArray(), password);
+            }
+            catch (CryptographicException)
+            {
+                throw new WrongPasswordException("Wrong password provided", password);
+            }
+            
         }
 
         public byte[] Encrypt(byte[] content, string password)
