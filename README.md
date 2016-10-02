@@ -3,6 +3,11 @@ Encryption library that allows you to add extra metadata information to the encr
 
 [![Version](https://img.shields.io/nuget/v/SimpleFileEncryption.svg)](https://www.nuget.org/packages/SimpleFileEncryption)
 
+### Install ###
+```csharp
+PM> Install-Package SimpleFileEncryption
+```
+
 ### Usage ###
 ```csharp
 string inputFile = "C:\test.txt";
