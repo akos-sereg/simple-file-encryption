@@ -224,5 +224,38 @@ namespace SimpleFileEncryptionTests
             byte[] cipher = encrypt.Encrypt(meta, randomBytes, "Sample Password", true);
             encrypt.GetMetadata<CryptoMetadata>(cipher, "Invalid Password");
         }
+
+        [TestMethod]
+        public void DataEncryption_IsEncryptedForRandom_Works()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            // Act 
+            bool isEncrypted = encrypt.IsEncrypted(randomBytes);
+
+            // Assert
+            Assert.IsFalse(isEncrypted);
+        }
+
+        [TestMethod]
+        public void DataEncryption_IsEncryptedForCipher_Works()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+            byte[] cipher = encrypt.Encrypt(randomBytes, "Sample Password");
+
+            // Act 
+            bool isEncrypted = encrypt.IsEncrypted(cipher);
+
+            // Assert
+            Assert.IsTrue(isEncrypted);
+        }
     }
 }

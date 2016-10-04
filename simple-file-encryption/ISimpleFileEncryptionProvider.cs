@@ -104,5 +104,19 @@
         /// <param name="password">Password</param>
         /// <returns>Metadata that was passed when EncryptFile was called</returns>
         T GetMetadata<T>(string filePath, string password);
+
+        /// <summary>
+        /// Returns true, if <see cref="content"/> is encrypted.
+        /// </summary>
+        /// <param name="content">Data to check</param>
+        /// <returns>True, if content is encrypted, false otherwise</returns>
+        bool IsEncrypted(byte[] content);
+
+        /// <summary>
+        /// Returns true, if <see cref="filePath"/> is encrypted.
+        /// </summary>
+        /// <param name="filePath">File to check</param>
+        /// <returns>True, if file is encrypted, false otherwise</returns>
+        bool IsEncrypted(string filePath);
     }
 }

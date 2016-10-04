@@ -91,7 +91,25 @@ namespace SimpleFileEncryption
             return this.Decrypt(content, password, out meta);
         }
 
-        #endregion
+        public bool IsEncrypted(byte[] content)
+        {
+            if (content.Length < header.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i != header.Length; i++)
+            {
+                if (content[i] != header[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion Data Encryption
 
         #region Reading Metadata
 
@@ -108,15 +126,7 @@ namespace SimpleFileEncryption
 
         public T GetMetadata<T>(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
-            {
-                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
-            }
+            this.CheckForReadAccess(filePath);
 
             byte[] encryptedContent;
             try
@@ -136,15 +146,7 @@ namespace SimpleFileEncryption
 
         public T GetMetadata<T>(string filePath, string password)
         {
-            if (string.IsNullOrEmpty(filePath))
-            {
-                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
-            }
+            this.CheckForReadAccess(filePath);
 
             byte[] encryptedContent;
             try
@@ -162,21 +164,13 @@ namespace SimpleFileEncryption
             }
         }
 
-        #endregion
+        #endregion Reading Metadata
 
         # region File Encryption
 
         public void EncryptFile<T>(T metadata, string filePath, string password, bool encryptMetadata = false)
         {
-            if (string.IsNullOrEmpty(filePath))
-            {
-                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
-            }
+            this.CheckForReadAccess(filePath);
 
             byte[] cipher = this.Encrypt<T>(metadata, File.ReadAllBytes(filePath), password, encryptMetadata);
 
@@ -215,15 +209,7 @@ namespace SimpleFileEncryption
         public void DecryptFile<T>(string filePath, string password, out T metadata)
         {
             metadata = default(T);
-            if (string.IsNullOrEmpty(filePath))
-            {
-                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
-            }
-
-            if (!File.Exists(filePath))
-            {
-                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
-            }
+            this.CheckForReadAccess(filePath);
 
             byte[] encryptedContent;
             try
@@ -260,6 +246,24 @@ namespace SimpleFileEncryption
             File.Move(filePath, originalTempPath);
             File.Move(decodedTempPath, filePath);
             File.Delete(originalTempPath);
+        }
+
+        public bool IsEncrypted(string filePath)
+        {
+            this.CheckForReadAccess(filePath);
+
+            try
+            {
+                return this.IsEncrypted(File.ReadAllBytes(filePath));
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Path too long: " + filePath, error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not read file: " + filePath, error);
+            }
         }
 
         #endregion
@@ -299,24 +303,6 @@ namespace SimpleFileEncryption
             }
         }
 
-        private bool IsEncrypted(byte[] content)
-        {
-            if (content.Length < header.Length)
-            {
-                return false;
-            }
-
-            for (var i = 0; i != header.Length; i++)
-            {
-                if (content[i] != header[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         private long GetMetaLength(byte[] content, out long metaStartOffset)
         {
             var start = header.Length + (MetaLengthKey + ":").Length;
@@ -353,6 +339,19 @@ namespace SimpleFileEncryption
             }
 
             return metaContent.ToArray();
+        }
+
+        private void CheckForReadAccess(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
+            }
         }
     }
 }

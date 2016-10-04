@@ -285,7 +285,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void FileEncryption_EncryptWithProtectedMeta_ReadMetaWithPassword_Throws()
+        public void FileEncryption_EncryptWithProtectedMeta_ReadMetaWithPassword_Works()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -306,6 +306,49 @@ namespace SimpleFileEncryptionTests
         }
 
         #endregion Testing metadata reader
+
+        #region Testing isEncrypted
+
+        [TestMethod]
+        public void FileEncryption_IsEncrypted_WorksForCipher()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            // Act
+            string tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, randomBytes);
+            encrypt.EncryptFile(tempFile, "password123");
+
+            bool isEncrypted = encrypt.IsEncrypted(tempFile);
+
+            // Assert
+            Assert.IsTrue(isEncrypted);
+        }
+
+        [TestMethod]
+        public void FileEncryption_IsEncrypted_WorksNormalFile()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+
+            // Act
+            string tempFile = Path.GetTempFileName();
+            File.WriteAllBytes(tempFile, randomBytes);
+            
+            bool isEncrypted = encrypt.IsEncrypted(tempFile);
+
+            // Assert
+            Assert.IsFalse(isEncrypted);
+        }
+
+        #endregion Testing isEncrypted
 
         private void AssertTemporaryFilesAreDeleted(string filePath)
         {
