@@ -51,7 +51,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="SimpleFileEncryptionProviderTest.cs" />
+    <Compile Include="FileEncryptionTest.cs" />
+    <Compile Include="DataEncryptionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

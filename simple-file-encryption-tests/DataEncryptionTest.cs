@@ -10,10 +10,10 @@ using SimpleFileEncryption.Exceptions;
 namespace SimpleFileEncryptionTests
 {
     [TestClass]
-    public class SimpleFileEncryptionProviderTest
+    public class DataEncryptionTest
     {
         [TestMethod]
-        public void SimpleFileEncryption_EncryptDecrypt_Works()
+        public void DataEncryption_EncryptDecrypt_Works()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -41,7 +41,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void SimpleFileEncryption_EncryptDecryptWithDynamicObject_Works()
+        public void DataEncryption_EncryptDecryptWithDynamicObject_Works()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -66,7 +66,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void SimpleFileEncryption_EncryptDecryptWithNull_Works()
+        public void DataEncryption_EncryptDecryptWithNull_Works()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -86,7 +86,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void SimpleFileEncryption_EncryptDecryptWithNoData_Works()
+        public void DataEncryption_EncryptDecryptWithNoData_Works()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -103,8 +103,26 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
+        public void DataEncryption_EncryptWithMetaDecryptWithNoMeta_Works()
+        {
+            // Arrange
+            ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
+
+            byte[] randomBytes = new byte[1024];
+            new Random().NextBytes(randomBytes);
+            CryptoMetadata meta = new CryptoMetadata("sample");
+
+            // Act
+            byte[] cipher = encrypt.Encrypt<CryptoMetadata>(meta, randomBytes, "Sample Password");
+            byte[] decrypted = encrypt.Decrypt(cipher, "Sample Password");
+
+            // Assert
+            Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(decrypted, randomBytes));
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(WrongPasswordException))]
-        public void SimpleFileEncryption_DecryptWithInvalidPassword_ThrowsException()
+        public void DataEncryption_DecryptWithInvalidPassword_ThrowsException()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -121,7 +139,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void SimpleFileEncryption_EncryptMetadataAswell_DecryptWorks()
+        public void DataEncryption_EncryptMetadataAswell_DecryptWorks()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -149,7 +167,7 @@ namespace SimpleFileEncryptionTests
         }
 
         [TestMethod]
-        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWorks()
+        public void DataEncryption_EncryptMetadataAswell_GetMetaWorks()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -175,7 +193,7 @@ namespace SimpleFileEncryptionTests
 
         [TestMethod]
         [ExpectedException(typeof(PasswordRequiredException))]
-        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWithNoPassword()
+        public void DataEncryption_EncryptMetadataAswell_GetMetaWithNoPassword()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();
@@ -192,7 +210,7 @@ namespace SimpleFileEncryptionTests
 
         [TestMethod]
         [ExpectedException(typeof(WrongPasswordException))]
-        public void SimpleFileEncryption_EncryptMetadataAswell_GetMetaWithBadPassword()
+        public void DataEncryption_EncryptMetadataAswell_GetMetaWithBadPassword()
         {
             // Arrange
             ISimpleFileEncryptionProvider encrypt = new SimpleFileEncryptionProvider();

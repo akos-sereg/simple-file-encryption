@@ -14,7 +14,7 @@ string inputFile = "C:\test.txt";
 string encryptedFile = "C:\test.encrypted.txt";
 
 // Encrypt file with custom metadata
-ISimpleFileEncryptionProvider encryption = new SimpleFileEncryptionProvider();
+var encryption = new SimpleFileEncryptionProvider();
 byte[] cipher = encryption.Encrypt<dynamic>(
     new { Filename = "Filename.txt" }, 
     File.ReadAllBytes(inputFile), 
@@ -26,7 +26,7 @@ dynamic meta;
 byte[] decrypted = encryption.Decrypt<dynamic>(
     File.ReadAllBytes(encryptedFile), 
     "passwd",
-    out meta); // throws WrongPasswordException
+    out meta); 
 Console.WriteLine(meta.Filename.ToString()); // "Filename.txt"
 Console.WriteLine(Encoding.UTF8.GetString(decrypted)); // original content of test.txt
 ```

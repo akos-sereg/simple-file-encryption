@@ -27,6 +27,8 @@ namespace SimpleFileEncryption
         /// </summary>
         private readonly byte[] header = { 0xFA, 0x15, 0xEC, 0x0D, 0xE5 };
 
+        #region Data Encryption
+
         public byte[] Encrypt<T>(T metadata, byte[] content, string password, bool encryptMetadata = false)
         {
             if (metadata == null)
@@ -89,6 +91,10 @@ namespace SimpleFileEncryption
             return this.Decrypt(content, password, out meta);
         }
 
+        #endregion
+
+        #region Reading Metadata
+
         public T GetMetadata<T>(byte[] content)
         {
             return this.GetMetadata<T>(content, null);
@@ -99,6 +105,164 @@ namespace SimpleFileEncryption
             long metaLength;
             return this.GetMetadataInner<T>(content, password, out metaLength);
         }
+
+        public T GetMetadata<T>(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
+            }
+
+            byte[] encryptedContent;
+            try
+            {
+                encryptedContent = File.ReadAllBytes(filePath);
+                return this.GetMetadata<T>(encryptedContent);
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Path too long: " + filePath, error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not read file: " + filePath, error);
+            }
+        }
+
+        public T GetMetadata<T>(string filePath, string password)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
+            }
+
+            byte[] encryptedContent;
+            try
+            {
+                encryptedContent = File.ReadAllBytes(filePath);
+                return this.GetMetadata<T>(encryptedContent, password);
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Path too long: " + filePath, error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not read file: " + filePath, error);
+            }
+        }
+
+        #endregion
+
+        # region File Encryption
+
+        public void EncryptFile<T>(T metadata, string filePath, string password, bool encryptMetadata = false)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
+            }
+
+            byte[] cipher = this.Encrypt<T>(metadata, File.ReadAllBytes(filePath), password, encryptMetadata);
+
+            string encodedTempPath = filePath + ".encoded";
+            string originalTempPath = filePath + ".orig";
+
+            try
+            {
+                File.WriteAllBytes(encodedTempPath, cipher);
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Destination path for temp location is too long (" + encodedTempPath + ")", error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not write file, permission denied:" + encodedTempPath, error);
+            }
+
+            File.Move(filePath, originalTempPath);
+            File.Move(encodedTempPath, filePath);
+            File.Delete(originalTempPath);
+        }
+
+        public void EncryptFile(string filePath, string password)
+        {
+            this.EncryptFile<dynamic>(null, filePath, password);
+        }
+
+        public void DecryptFile(string filePath, string password)
+        {
+            dynamic metadata;
+            this.DecryptFile(filePath, password, out metadata);
+        }
+
+        public void DecryptFile<T>(string filePath, string password, out T metadata)
+        {
+            metadata = default(T);
+            if (string.IsNullOrEmpty(filePath))
+            {
+                throw new FileEncryptionException("File Path is missing", new ArgumentNullException("filePath"));
+            }
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileEncryptionException("File does not exist: " + filePath, new ArgumentException("filePath"));
+            }
+
+            byte[] encryptedContent;
+            try
+            {
+                encryptedContent = File.ReadAllBytes(filePath);
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Path too long: " + filePath, error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not read file: " + filePath, error);
+            }
+
+            byte[] originalContent = this.Decrypt<T>(encryptedContent, password, out metadata);
+
+            string decodedTempPath = filePath + ".decoded";
+            string originalTempPath = filePath + ".orig";
+
+            try
+            {
+                File.WriteAllBytes(decodedTempPath, originalContent);
+            }
+            catch (PathTooLongException error)
+            {
+                throw new FileEncryptionException("Destination path for temp location is too long (" + decodedTempPath + ")", error);
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                throw new FileEncryptionException("Can not write file, permission denied:" + decodedTempPath, error);
+            }
+
+            File.Move(filePath, originalTempPath);
+            File.Move(decodedTempPath, filePath);
+            File.Delete(originalTempPath);
+        }
+
+        #endregion
 
         private T GetMetadataInner<T>(byte[] content, string password, out long metaLength)
         {

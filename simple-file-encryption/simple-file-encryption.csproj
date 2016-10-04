@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Cryptography\BinaryCryptoProvider.cs" />
     <Compile Include="Cryptography\IDataCryptoProvider.cs" />
+    <Compile Include="Exceptions\FileEncryptionException.cs" />
     <Compile Include="Exceptions\PasswordRequiredException.cs" />
     <Compile Include="Exceptions\WrongPasswordException.cs" />
     <Compile Include="ISimpleFileEncryptionProvider.cs" />
